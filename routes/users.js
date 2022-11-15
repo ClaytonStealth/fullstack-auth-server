@@ -78,14 +78,50 @@ router.post("/login", async (req, res) => {
       scope: userPerms,
     };
     const secretKey = process.env.JWT_SECRET_KEY;
+    console.log(secretKey);
+
     const exp = Math.floor(Date.now() / 1000) + 60 * 60;
     const payload = {
       userData,
       exp,
     };
     const token = jwt.sign(payload, secretKey);
+
+    res.json({
+      success: true,
+      token,
+      email,
+    });
   } catch (err) {
     console.log(err);
+    res.json({
+      success: false,
+      error: err.toString(),
+    });
+  }
+});
+
+router.get("/message", async (req, res) => {
+  const headerTokenKey = process.env.TOKEN_HEADER_KEY;
+  const token = req.header(headerTokenKey);
+  const secretKey = process.env.JWT_SECRET_KEY;
+  try {
+    const decoded = jwt.verify(token, secretKey);
+    if (decoded.userData.scope === "admin") {
+      res.json({
+        success: true,
+        message: "Welcome to the secret admin message",
+        decoded,
+      });
+    }
+    if (decoded.userData.scope === "user") {
+      res.json({
+        success: true,
+        message: "Welcome to the secret user message",
+        decoded,
+      });
+    }
+  } catch (err) {
     res.json({
       success: false,
       error: err.toString(),
