@@ -11,7 +11,7 @@ router.get("/", function (req, res, next) {
   res.send("respond with a resource");
 });
 
-router.post("/registration", async (req, res, next) => {
+router.post("/register", async (req, res, next) => {
   try {
     const email = req.body.email;
     const password = req.body.password;
@@ -107,20 +107,27 @@ router.get("/message", async (req, res) => {
   const secretKey = process.env.JWT_SECRET_KEY;
   try {
     const decoded = jwt.verify(token, secretKey);
-    if (decoded.userData.scope === "admin") {
+    if (!decoded) {
+      return res.json({
+        success: false,
+        message: "ID Token could not be verified",
+      });
+    }
+    if (userData && decoded.userData.scope === "admin") {
       res.json({
         success: true,
         message: "Welcome to the secret admin message",
         decoded,
       });
     }
-    if (decoded.userData.scope === "user") {
+    if (userData && decoded.userData.scope === "user") {
       res.json({
         success: true,
         message: "Welcome to the secret user message",
         decoded,
       });
     }
+    throw Error("Access Denied");
   } catch (err) {
     res.json({
       success: false,
